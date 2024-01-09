@@ -26,14 +26,14 @@
 #ifndef _PLANNER_MANAGER_H_
 #define _PLANNER_MANAGER_H_
 
-#include <bspline_opt/bspline_optimizer.h>
+#include <fast_bspline_opt/bspline_optimizer.h>
 #include <bspline/non_uniform_bspline.h>
 
-#include <path_searching/astar.h>
-#include <path_searching/kinodynamic_astar.h>
-#include <path_searching/topo_prm.h>
+#include <fast_path_searching/astar.h>
+#include <fast_path_searching/kinodynamic_astar.h>
+#include <fast_path_searching/topo_prm.h>
 
-#include <plan_env/edt_environment.h>
+#include <fast_plan_env/edt_environment.h>
 
 #include <plan_manage/plan_container.hpp>
 

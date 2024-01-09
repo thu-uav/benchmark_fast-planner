@@ -15,11 +15,11 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   geometry_msgs
   quadrotor_msgs
-  plan_env
-  path_searching
+  fast_plan_env
+  fast_path_searching
   bspline
-  bspline_opt
-  traj_utils
+  fast_bspline_opt
+  fast_traj_utils
   message_generation
   cv_bridge
 )
@@ -41,7 +41,7 @@ generate_messages(
 catkin_package(
  INCLUDE_DIRS include
  LIBRARIES plan_manage
- CATKIN_DEPENDS plan_env path_searching bspline bspline_opt traj_utils message_runtime
+ CATKIN_DEPENDS fast_plan_env fast_path_searching bspline fast_bspline_opt fast_traj_utils message_runtime
 #  DEPENDS system_lib
 )
 

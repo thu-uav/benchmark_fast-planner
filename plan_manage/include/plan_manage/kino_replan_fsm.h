@@ -35,14 +35,14 @@
 #include <vector>
 #include <visualization_msgs/Marker.h>
 
-#include <bspline_opt/bspline_optimizer.h>
-#include <path_searching/kinodynamic_astar.h>
-#include <plan_env/edt_environment.h>
-#include <plan_env/obj_predictor.h>
-#include <plan_env/sdf_map.h>
+#include <fast_bspline_opt/bspline_optimizer.h>
+#include <fast_path_searching/kinodynamic_astar.h>
+#include <fast_plan_env/edt_environment.h>
+#include <fast_plan_env/obj_predictor.h>
+#include <fast_plan_env/sdf_map.h>
 #include <plan_manage/Bspline.h>
 #include <plan_manage/planner_manager.h>
-#include <traj_utils/planning_visualization.h>
+#include <fast_traj_utils/planning_visualization.h>
 
 using std::vector;
 
