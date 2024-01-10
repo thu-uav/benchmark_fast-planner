@@ -56,12 +56,12 @@
     <arg name="fy" value="240"/>
 
     <!-- maximum velocity and acceleration the drone will reach -->
-    <arg name="max_vel" value="3.0" />
-    <arg name="max_acc" value="2.0" />
+    <arg name="max_vel" value="2.0" />
+    <arg name="max_acc" value="3.0" />
 
     <!-- 1: use 2D Nav Goal to select goal  -->
     <!-- 2: use global waypoints below  -->
-    <arg name="flight_type" value="1" />
+    <arg name="flight_type" value="2" />
     
     <!-- global waypoints -->
     <!-- If flight_type is set to 2, the drone will travel these waypoints one by one -->
@@ -90,8 +90,7 @@
 
   <!-- trajectory server -->
   <node pkg="plan_manage" name="traj_server" type="traj_server" output="screen">
-    <remap from="/position_cmd" to="planning/pos_cmd"/>
-
+    <remap from="/position_cmd" to="$(arg quad_name)/autopilot/reference_state"/>
     <remap from="/odom_world" to="$(arg odom_topic)"/>
     <param name="traj_server/time_forward" value="1.0" type="double"/>
   </node>

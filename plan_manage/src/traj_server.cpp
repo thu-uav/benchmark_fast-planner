@@ -27,6 +27,7 @@
 #include "nav_msgs/Odometry.h"
 #include "plan_manage/Bspline.h"
 #include "quadrotor_msgs/PositionCommand.h"
+#include <quadrotor_msgs/TrajectoryPoint.h>
 #include "std_msgs/Empty.h"
 #include "visualization_msgs/Marker.h"
 #include <ros/ros.h>
@@ -234,37 +235,52 @@ void cmdCallback(const ros::TimerEvent& e) {
     cout << "[Traj server]: invalid time." << endl;
   }
 
-  cmd.header.stamp = time_now;
-  cmd.header.frame_id = "world";
-  cmd.trajectory_flag = quadrotor_msgs::PositionCommand::TRAJECTORY_STATUS_READY;
-  cmd.trajectory_id = traj_id_;
+  // cmd.header.stamp = time_now;
+  // cmd.header.frame_id = "world";
+  // cmd.trajectory_flag = quadrotor_msgs::PositionCommand::TRAJECTORY_STATUS_READY;
+  // cmd.trajectory_id = traj_id_;
 
-  cmd.position.x = pos(0);
-  cmd.position.y = pos(1);
-  cmd.position.z = pos(2);
+  // cmd.position.x = pos(0);
+  // cmd.position.y = pos(1);
+  // cmd.position.z = pos(2);
 
-  cmd.velocity.x = vel(0);
-  cmd.velocity.y = vel(1);
-  cmd.velocity.z = vel(2);
+  // cmd.velocity.x = vel(0);
+  // cmd.velocity.y = vel(1);
+  // cmd.velocity.z = vel(2);
 
-  cmd.acceleration.x = acc(0);
-  cmd.acceleration.y = acc(1);
-  cmd.acceleration.z = acc(2);
+  // cmd.acceleration.x = acc(0);
+  // cmd.acceleration.y = acc(1);
+  // cmd.acceleration.z = acc(2);
 
-  cmd.yaw = yaw;
-  cmd.yaw_dot = yawdot;
+  // cmd.yaw = yaw;
+  // cmd.yaw_dot = yawdot;
 
-  auto pos_err = pos_f - pos;
-  // if (pos_err.norm() > 1e-3) {
-  //   cmd.yaw = atan2(pos_err(1), pos_err(0));
-  // } else {
-  //   cmd.yaw = last_yaw_;
-  // }
-  // cmd.yaw_dot = 1.0;
+  // auto pos_err = pos_f - pos;
+  // // if (pos_err.norm() > 1e-3) {
+  // //   cmd.yaw = atan2(pos_err(1), pos_err(0));
+  // // } else {
+  // //   cmd.yaw = last_yaw_;
+  // // }
+  // // cmd.yaw_dot = 1.0;
 
-  last_yaw_ = cmd.yaw;
+  // last_yaw_ = cmd.yaw;
 
-  pos_cmd_pub.publish(cmd);
+  quadrotor_msgs::TrajectoryPoint cmd_;
+  cmd_.time_from_start = ros::Duration(0.01);
+  cmd_.pose.position.x = pos(0);
+  cmd_.pose.position.y = pos(1);
+  cmd_.pose.position.z = pos(2);
+  cmd_.pose.orientation.w = 1.0;
+  cmd_.heading = yaw;
+  cmd_.velocity.angular.z = yawdot;
+  cmd_.velocity.linear.x = vel(0);
+  cmd_.velocity.linear.y = vel(1);
+  cmd_.velocity.linear.z = vel(2);
+  cmd_.acceleration.linear.x = acc(0);
+  cmd_.acceleration.linear.y = acc(1);
+  cmd_.acceleration.linear.z = acc(2);
+
+  pos_cmd_pub.publish(cmd_);
 
   // draw cmd
 
@@ -290,7 +306,7 @@ int main(int argc, char** argv) {
   ros::Subscriber odom_sub = node.subscribe("/odom_world", 50, odomCallbck);
 
   cmd_vis_pub = node.advertise<visualization_msgs::Marker>("planning/position_cmd_vis", 10);
-  pos_cmd_pub = node.advertise<quadrotor_msgs::PositionCommand>("/position_cmd", 50);
+  pos_cmd_pub = node.advertise<quadrotor_msgs::TrajectoryPoint>("/position_cmd", 50);
   traj_pub = node.advertise<visualization_msgs::Marker>("planning/travel_traj", 10);
 
   ros::Timer cmd_timer = node.createTimer(ros::Duration(0.01), cmdCallback);
