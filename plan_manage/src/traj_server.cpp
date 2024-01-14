@@ -29,10 +29,11 @@
 #include "quadrotor_msgs/PositionCommand.h"
 #include <quadrotor_msgs/TrajectoryPoint.h>
 #include "std_msgs/Empty.h"
+#include "std_msgs/Float32.h"
 #include "visualization_msgs/Marker.h"
 #include <ros/ros.h>
 
-ros::Publisher cmd_vis_pub, pos_cmd_pub, traj_pub;
+ros::Publisher cmd_vis_pub, pos_cmd_pub, traj_pub, projection_time_pub_;
 
 nav_msgs::Odometry odom;
 
@@ -208,6 +209,8 @@ void cmdCallback(const ros::TimerEvent& e) {
   ros::Time time_now = ros::Time::now();
   double t_cur = (time_now - start_time_).toSec();
 
+  auto t_start = std::chrono::system_clock::now();
+
   Eigen::Vector3d pos, vel, acc, pos_f;
   double yaw, yawdot;
 
@@ -265,6 +268,8 @@ void cmdCallback(const ros::TimerEvent& e) {
 
   // last_yaw_ = cmd.yaw;
 
+  auto t_projection = std::chrono::system_clock::now()-t_start;
+
   quadrotor_msgs::TrajectoryPoint cmd_;
   cmd_.time_from_start = ros::Duration(0.01);
   cmd_.pose.position.x = pos(0);
@@ -287,6 +292,10 @@ void cmdCallback(const ros::TimerEvent& e) {
   // drawCmd(pos, vel, 0, Eigen::Vector4d(0, 1, 0, 1));
   // drawCmd(pos, acc, 1, Eigen::Vector4d(0, 0, 1, 1));
 
+  std_msgs::Float32 time_msg;
+  time_msg.data = std::chrono::duration_cast<std::chrono::nanoseconds>(t_projection).count() / 1e6;
+  projection_time_pub_.publish(time_msg);
+
   Eigen::Vector3d dir(cos(yaw), sin(yaw), 0.0);
   drawCmd(pos, 2 * dir, 2, Eigen::Vector4d(1, 1, 0, 0.7));
   // drawCmd(pos, pos_err, 3, Eigen::Vector4d(1, 1, 0, 0.7));
@@ -308,6 +317,7 @@ int main(int argc, char** argv) {
   cmd_vis_pub = node.advertise<visualization_msgs::Marker>("planning/position_cmd_vis", 10);
   pos_cmd_pub = node.advertise<quadrotor_msgs::TrajectoryPoint>("/position_cmd", 50);
   traj_pub = node.advertise<visualization_msgs::Marker>("planning/travel_traj", 10);
+  projection_time_pub_ = node.advertise<std_msgs::Float32>("/projection_time", 10);
 
   ros::Timer cmd_timer = node.createTimer(ros::Duration(0.01), cmdCallback);
   ros::Timer vis_timer = node.createTimer(ros::Duration(0.25), visCallback);

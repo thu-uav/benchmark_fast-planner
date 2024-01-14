@@ -169,6 +169,8 @@ void SDFMap::initMap(ros::NodeHandle& nh) {
   unknown_pub_ = node_.advertise<sensor_msgs::PointCloud2>("/sdf_map/unknown", 10);
   depth_pub_ = node_.advertise<sensor_msgs::PointCloud2>("/sdf_map/depth_cloud", 10);
 
+  mapping_time_pub_ = node_.advertise<std_msgs::Float32>("/mapping_time", 10);
+
   md_.occ_need_update_ = false;
   md_.local_updated_ = false;
   md_.esdf_need_update_ = false;
@@ -782,6 +784,7 @@ void SDFMap::updateOccupancyCallback(const ros::TimerEvent& /*event*/) {
   /* update occupancy */
   ros::Time t1, t2;
   t1 = ros::Time::now();
+  auto t_start = std::chrono::system_clock::now();
 
   projectDepthImage();
   raycastProcess();
@@ -789,6 +792,8 @@ void SDFMap::updateOccupancyCallback(const ros::TimerEvent& /*event*/) {
   if (md_.local_updated_) clearAndInflateLocalMap();
 
   t2 = ros::Time::now();
+  auto t_occ = std::chrono::system_clock::now() - t_start;
+  upd_occ_time_ = std::chrono::duration_cast<std::chrono::nanoseconds>(t_occ).count() / 1e6;
 
   md_.fuse_time_ += (t2 - t1).toSec();
   md_.max_fuse_time_ = max(md_.max_fuse_time_, (t2 - t1).toSec());
@@ -808,10 +813,12 @@ void SDFMap::updateESDFCallback(const ros::TimerEvent& /*event*/) {
   /* esdf */
   ros::Time t1, t2;
   t1 = ros::Time::now();
+  auto t_start = std::chrono::system_clock::now();
 
   updateESDF3d();
 
   t2 = ros::Time::now();
+  auto t_map = std::chrono::system_clock::now() - t_start;
 
   md_.esdf_time_ += (t2 - t1).toSec();
   md_.max_esdf_time_ = max(md_.max_esdf_time_, (t2 - t1).toSec());
@@ -821,6 +828,10 @@ void SDFMap::updateESDFCallback(const ros::TimerEvent& /*event*/) {
              md_.esdf_time_ / md_.update_num_, md_.max_esdf_time_);
 
   md_.esdf_need_update_ = false;
+
+  std_msgs::Float32 time_msg;
+  time_msg.data = std::chrono::duration_cast<std::chrono::nanoseconds>(t_map).count() / 1e6 + upd_occ_time_;
+  mapping_time_pub_.publish(time_msg);
 }
 
 void SDFMap::depthPoseCallback(const sensor_msgs::ImageConstPtr& img,

@@ -32,11 +32,13 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <iostream>
 #include <random>
+#include <chrono>
 #include <nav_msgs/Odometry.h>
 #include <queue>
 #include <ros/ros.h>
 #include <tuple>
 #include <visualization_msgs/Marker.h>
+#include <std_msgs/Float32.h>
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
@@ -280,6 +282,8 @@ private:
   ros::Subscriber indep_depth_sub_, indep_odom_sub_, indep_pose_sub_, indep_cloud_sub_;
   ros::Publisher map_pub_, esdf_pub_, map_inf_pub_, update_range_pub_;
   ros::Publisher unknown_pub_, depth_pub_;
+  ros::Publisher mapping_time_pub_;
+  float upd_occ_time_ = 0.0;
   ros::Timer occ_timer_, esdf_timer_, vis_timer_;
 
   //

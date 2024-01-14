@@ -26,6 +26,7 @@
 // #include <fstream>
 #include <plan_manage/planner_manager.h>
 #include <thread>
+#include <chrono>
 
 namespace fast_planner {
 
@@ -86,6 +87,7 @@ void FastPlannerManager::initPlanModules(ros::NodeHandle& nh) {
     topo_prm_->setEnvironment(edt_environment_);
     topo_prm_->init(nh);
   }
+  planning_time_pub_ = nh.advertise<std_msgs::Float32>("/planning_time", 5);
 }
 
 void FastPlannerManager::setGlobalWaypoints(vector<Eigen::Vector3d>& waypoints) {
@@ -138,8 +140,6 @@ bool FastPlannerManager::kinodynamicReplan(Eigen::Vector3d start_pt, Eigen::Vect
     return false;
   }
 
-  ros::Time t1, t2;
-
   local_data_.start_time_ = ros::Time::now();
   double t_search = 0.0, t_opt = 0.0, t_adjust = 0.0;
 
@@ -149,7 +149,7 @@ bool FastPlannerManager::kinodynamicReplan(Eigen::Vector3d start_pt, Eigen::Vect
 
   // kinodynamic path searching
 
-  t1 = ros::Time::now();
+  auto t1 = std::chrono::system_clock::now();
 
   kino_path_finder_->reset();
 
@@ -175,7 +175,7 @@ bool FastPlannerManager::kinodynamicReplan(Eigen::Vector3d start_pt, Eigen::Vect
 
   plan_data_.kino_path_ = kino_path_finder_->getKinoTraj(0.01);
 
-  t_search = (ros::Time::now() - t1).toSec();
+  t_search = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now() - t1).count() / 1e6;
 
   // parameterize the path to bspline
 
@@ -189,7 +189,7 @@ bool FastPlannerManager::kinodynamicReplan(Eigen::Vector3d start_pt, Eigen::Vect
 
   // bspline trajectory optimization
 
-  t1 = ros::Time::now();
+  t1 = std::chrono::system_clock::now();
 
   int cost_function = BsplineOptimizer::NORMAL_PHASE;
 
@@ -199,11 +199,11 @@ bool FastPlannerManager::kinodynamicReplan(Eigen::Vector3d start_pt, Eigen::Vect
 
   ctrl_pts = bspline_optimizers_[0]->BsplineOptimizeTraj(ctrl_pts, ts, cost_function, 1, 1);
 
-  t_opt = (ros::Time::now() - t1).toSec();
+  t_opt = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now() - t1).count() / 1e6;
 
   // iterative time adjustment
 
-  t1                    = ros::Time::now();
+  t1                    = std::chrono::system_clock::now();
   NonUniformBspline pos = NonUniformBspline(ctrl_pts, 3, ts);
 
   double to = pos.getTimeSum();
@@ -226,21 +226,25 @@ bool FastPlannerManager::kinodynamicReplan(Eigen::Vector3d start_pt, Eigen::Vect
   cout << "[kino replan]: Reallocate ratio: " << tn / to << endl;
   if (tn / to > 3.0) ROS_ERROR("reallocate error.");
 
-  t_adjust = (ros::Time::now() - t1).toSec();
+  t_adjust = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now() - t1).count() / 1e6;
 
   // save planned results
 
   local_data_.position_traj_ = pos;
 
   double t_total = t_search + t_opt + t_adjust;
-  cout << "[kino replan]: time: " << t_total << ", search: " << t_search << ", optimize: " << t_opt
-       << ", adjust time:" << t_adjust << endl;
+  // cout << "[kino replan]: time: " << t_total << ", search: " << t_search << ", optimize: " << t_opt
+  //      << ", adjust time:" << t_adjust << endl;
 
-  pp_.time_search_   = t_search;
-  pp_.time_optimize_ = t_opt;
-  pp_.time_adjust_   = t_adjust;
+  pp_.time_search_   = t_search / 1e3;
+  pp_.time_optimize_ = t_opt / 1e3;
+  pp_.time_adjust_   = t_adjust / 1e3;
 
   updateTrajInfo();
+
+  std_msgs::Float32 time_msg;
+  time_msg.data = t_total;
+  planning_time_pub_.publish(time_msg);
 
   return true;
 }

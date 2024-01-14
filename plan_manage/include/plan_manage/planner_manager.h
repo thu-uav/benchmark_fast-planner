@@ -38,6 +38,7 @@
 #include <plan_manage/plan_container.hpp>
 
 #include <ros/ros.h>
+#include <std_msgs/Float32.h>
 
 namespace fast_planner {
 
@@ -101,6 +102,7 @@ private:
   // !SECTION stable
 
   // SECTION developing
+  ros::Publisher planning_time_pub_;
 
 public:
   typedef unique_ptr<FastPlannerManager> Ptr;
