@@ -319,7 +319,6 @@ void KinoReplanFSM::checkWaypointCallback(const ros::TimerEvent& e) {
     have_target_ = false;
     return;
   }
-  std::cout<<"curr_wpt: "<<current_wp_<<std::endl;
   trigger_ = true;
   end_pt_(0)  = waypoints_[current_wp_][0];
   end_pt_(1)  = waypoints_[current_wp_][1];
@@ -333,10 +332,8 @@ void KinoReplanFSM::checkWaypointCallback(const ros::TimerEvent& e) {
   
   if ((end_pt_ - odom_pos_).norm() < no_replan_thresh_) {
       current_wp_++;
-    std::cout<<"current wpt ++, return"<<std::endl;
     return;
   }
-  std::cout<<"callback done, return"<<std::endl;
 }
 
 bool KinoReplanFSM::callKinodynamicReplan() {
