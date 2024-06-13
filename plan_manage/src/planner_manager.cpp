@@ -175,8 +175,6 @@ bool FastPlannerManager::kinodynamicReplan(Eigen::Vector3d start_pt, Eigen::Vect
 
   plan_data_.kino_path_ = kino_path_finder_->getKinoTraj(0.01);
 
-  t_search = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now() - t1).count() / 1e6;
-
   // parameterize the path to bspline
 
   double                  ts = pp_.ctrl_pt_dist / pp_.max_vel_;
@@ -186,6 +184,8 @@ bool FastPlannerManager::kinodynamicReplan(Eigen::Vector3d start_pt, Eigen::Vect
   Eigen::MatrixXd ctrl_pts;
   NonUniformBspline::parameterizeToBspline(ts, point_set, start_end_derivatives, ctrl_pts);
   NonUniformBspline init(ctrl_pts, 3, ts);
+  
+  t_search = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now() - t1).count() / 1e6;
 
   // bspline trajectory optimization
 
